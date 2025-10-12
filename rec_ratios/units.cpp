@@ -1,55 +1,45 @@
 #include <iostream>
 #include <vector>
+
+static int mod = 1000000007;
 using namespace std;
 
-const int MOD = 1000000007;
-
-int binRec(int n, int k, vector<vector<int>>& table) 
+long long BinExp(long long a, long long n) 
 {
-    if (k == 0 || k == n) return 1;
-    if (k == 1 || k == n - 1) return n;
-    if (k > n - k) k = n - k;
-    
-    if (table[n][k] != -1) return table[n][k];
-    
-    int result = (binRec(n - 1, k - 1, table) + binRec(n - 1, k, table)) % MOD;
-    table[n][k] = result;
-    return result;
-}
-
-int find(int N, int K) 
-{
-    if (K < 0 || K > N) return 0;
-    if (K == 0 || K == N) return 1;
-    if (K > N - K) K = N - K;
-
-    vector<vector<int>> table(N + 1, vector<int>(K + 1, -1));
-    
-    return binRec(N, K, table);
-}
-
-int findDP(int N, int K) 
-{
-    if (K < 0 || K > N) return 0;
-    if (K > N - K) K = N - K;
-
-    vector<int> dp(K + 1, 0);
-    dp[0] = 1;
-    
-    for (int i = 1; i <= N; i++) 
-    {
-        for (int j = min(i, K); j > 0; j--) 
-        {
-            dp[j] = (dp[j] + dp[j - 1]) % MOD;
-        }
-    }
-    
-    return dp[K];
+    if (n == 0) return 1;
+    if (n == 1) return a % mod;
+    long long t = BinExp(a, n >> 1);
+    t = (t * t) % mod;
+    if ((n & 1) == 0) 
+        return t;
+    else 
+        return (t * a) % mod;
 }
 
 int main()
 {
     int N, K;
     cin >> N >> K;
-    cout << find(N, K);
+    
+    if (K > N) 
+    {
+        cout << 0;
+        return 0;
+    }
+    
+    if (K > N - K) {
+        K = N - K;
+    }
+    
+    long long top = 1, bott = 1;
+    for (int i = 1; i <= K; i++) 
+    {
+        top = (top * (N - i + 1)) % mod;
+        bott = (bott * i) % mod;
+    }
+    
+    long long res = (top * BinExp(bott, mod - 2)) % mod;
+    cout << res;
+    
+    return 0;
 }
