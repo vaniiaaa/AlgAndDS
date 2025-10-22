@@ -2,43 +2,42 @@
 #include <vector>
 #include <iostream>
 
+
 using namespace std;
 
 struct node
 {
-    long long value;
-    char LRpos;
-    long long relpos;
+    int value;
     long long lower, upper;
     node()
     {
-        lower = INT_MIN;
-        upper = (long long)INT_MAX + 1;
+        lower = INT_MIN - 1;
+        upper = INT_MAX + 1;
     }
 };
 
 int main()
-{
+{   
     ifstream in("bst.in");
     ofstream out("bst.out");
-    long long n;
+    int n;
     in >> n;
     vector<node> tree(n + 1);
-    long long fnum;
+    int fnum;
     in >> fnum;
     tree[1].value = fnum;
-    for (long long i = 2; i <= n; i++)
+    for (int i = 2; i <= n; i++)
     {
-        long long value, relpos;
+        int value, relpos;
         char LRpos;
         in >> value >> relpos >> LRpos;
-        if (LRpos == 'L' && tree[relpos].lower < (long long)value && (long long)value < tree[relpos].value)
+        if (LRpos == 'L' && tree[relpos].lower < static_cast<long long>(value) && static_cast<long long>(value) < tree[relpos].value)
         {
             tree[i].value = value;
             tree[i].upper = tree[relpos].value;
             tree[i].lower = tree[relpos].lower;
         }
-        else if (LRpos == 'R' && (long long)value >= tree[relpos].value && (long long)value < tree[relpos].upper)
+        else if (LRpos == 'R' && tree[relpos].value <= static_cast<long long>(value)  && static_cast<long long>(value) < tree[relpos].upper)
         {
             tree[i].value = value;
             tree[i].upper = tree[relpos].upper;
