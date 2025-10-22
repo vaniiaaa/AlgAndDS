@@ -1,16 +1,25 @@
+template<typename T>
 class BSTree
 {
-    int value;
-    BSTree *left;
-    BSTree *right;
+    T value;
+    BSTree<T> *left;
+    BSTree<T> *right;
     BSTree() : value(0), left(nullptr), right(nullptr) {}
 public:
     
     BSTree(int val) : value(val), left(nullptr), right(nullptr) {}
     ~BSTree()
     {
-        delete left;
-        delete right;
+        if (left != nullptr)
+        {
+            delete left;
+            left = nullptr;
+        }
+        if (right != nullptr)
+        {
+            delete right;
+            right = nullptr;
+        }
     }
 
     void AddValue(int val)
@@ -19,14 +28,14 @@ public:
         if (val < value)
         {
             if (left == nullptr)
-                left = new BSTree(val);
+                left = new BSTree<T>(val);
             else
                 left->AddValue(val);
         }
         else
         {
             if (right == nullptr)
-                right = new BSTree(val);
+                right = new BSTree<T>(val);
             else
                 right->AddValue(val);
         }
@@ -54,21 +63,13 @@ public:
 
     void deleteTree()
     {
-        while (left != nullptr)
-        {
-            left->deleteTree();
-            delete left;
-            left = nullptr;
-        }
-        while (right != nullptr)
-        {
-            right->deleteTree();
-            delete right;
-            right = nullptr;
-        }
+        delete left;
+        delete right;
+        left = nullptr;
+        right = nullptr;
     }
 
-    void deleteRight(BSTree*& node, int val)
+    void deleteRight(BSTree<T>*& node, int val)
     {
         if (node == nullptr) return;
 
@@ -78,7 +79,6 @@ public:
             deleteRight(node->right, val);
         else
         {
-            
             if (node->left == nullptr && node->right == nullptr)
             {
                 delete node;
@@ -86,23 +86,34 @@ public:
             }
             else if (node->left == nullptr || node->right == nullptr)
             {
-                BSTree* temp = (node->left != nullptr) ? node->left : node->right;
+                BSTree<T>* temp = (node->left != nullptr) ? node->left : node->right;
                 delete node;
                 node = temp;
             }
             else
             {
-                BSTree* minNode = node->right;
+                BSTree<T>* parent = node;
+                BSTree<T>* minNode = node->right;
+
                 while (minNode->left != nullptr)
+                {
+                    parent = minNode;
                     minNode = minNode->left;
+                }
 
                 node->value = minNode->value;
-                deleteRight(node->right, minNode->value);
+
+                if (parent->left == minNode)
+                    parent->left = minNode->right;
+                else
+                    parent->right = minNode->right;
+
+                delete minNode;
             }
         }
     }
-    
-    void deleteLeft(BSTree*& node, int val)
+
+    void deleteLeft(BSTree<T>*& node, int val)
     {
         if (node == nullptr) return;
 
@@ -120,23 +131,31 @@ public:
             }
             else if (node->left == nullptr || node->right == nullptr)
             {
-                BSTree* temp = (node->left != nullptr) ? node->left : node->right;
+                BSTree<T>* temp = (node->left != nullptr) ? node->left : node->right;
                 delete node;
                 node = temp;
             }
             else
             {
-                BSTree* maxNode = node->left;
+                BSTree<T>* parent = node;
+                BSTree<T>* maxNode = node->left;
                 while (maxNode->right != nullptr)
+                {
+                    parent = maxNode;
                     maxNode = maxNode->right;
-
+                }
                 node->value = maxNode->value;
-                deleteLeft(node->left, maxNode->value);
+                
+                if (parent->right == maxNode)
+                    parent->right = maxNode->left;
+                else
+                    parent->left = maxNode->left;
+                delete maxNode;
             }
         }
     }
 //-------------------------ПРЯМОЙ ПРАВЫЙ ОБХОД-------------------------
- 
+
     void PreOrderRight(std::ostream& out)
     {
         out << value << '\n';
@@ -206,7 +225,7 @@ public:
 private:
     int GetValue() const { return value; }
     
-    /*BSTree* FindParent(int val)
+    /*BSTree<T>* FindParent(int val)
     {
         if ((left != nullptr && left->value == val) || (right != nullptr && right->value == val))
             return this;
@@ -228,7 +247,7 @@ private:
 
 
 
-    /*BSTree* FindNode(int val) 
+    /*BSTree<T><T>* FindNode(int val) 
     {
         if (val == value)
             return this;
