@@ -136,21 +136,7 @@ public:
         }
     }
 //-------------------------ПРЯМОЙ ПРАВЫЙ ОБХОД-------------------------
-    void PreOrderRight()
-    {
-        std::cout << value << " ";
-        if (right != nullptr)
-            right->PreOrderRight();
-        if (left != nullptr)
-            left->PreOrderRight();
-    }
-    void PreOrderRight(BSTree* node)
-    {
-        if (node == nullptr) return;
-        std::cout << node->value << " ";
-        PreOrderRight(node->right);
-        PreOrderRight(node->left);
-    }
+ 
     void PreOrderRight(std::ostream& out)
     {
         out << value << '\n';
@@ -162,21 +148,6 @@ public:
 
 //-------------------------ПРЯМОЙ ЛЕВЫЙ ОБХОД-------------------------
 
-    void PreOrderLeft()
-    {
-        std::cout << value << " ";
-        if (left != nullptr)
-            left->PreOrderLeft();
-        if (right != nullptr)
-            right->PreOrderLeft();
-    }
-    void PreOrderLeft(BSTree* node)
-    {
-        if (node == nullptr) return;
-        std::cout << node->value << " ";
-        PreOrderLeft(node->left);
-        PreOrderLeft(node->right);
-    }
     void PreOrderLeft(std::ostream& out)
     {
         out << value << '\n';
@@ -188,21 +159,6 @@ public:
 
 //-------------------------ОБРАТНЫЙ ПРАВЫЙ ОБХОД-------------------------
 
-    void PostOrderRight()
-    {
-        if (right != nullptr)
-            right->PostOrderRight();
-        if (left != nullptr)
-            left->PostOrderRight();
-        std::cout << value << " ";
-    }
-    void PostOrderRight(BSTree* node)
-    {
-        if (node == nullptr) return;
-        PostOrderRight(node->right);
-        PostOrderRight(node->left);
-        std::cout << node->value << " ";
-    }
     void PostOrderRight(std::ostream& out)
     {
         if (right != nullptr)
@@ -214,21 +170,6 @@ public:
 
 //-------------------------ОБРАТНЫЙ ЛЕВЫЙ ОБХОД-------------------------
     
-    void PostOrderLeft()
-    {
-        if (left != nullptr)
-            left->PostOrderLeft();
-        if (right != nullptr)
-            right->PostOrderLeft();
-        std::cout << value << " ";
-    }
-    void PostOrderLeft(BSTree* node)
-    {
-        if (node == nullptr) return;
-        PostOrderLeft(node->left);
-        PostOrderLeft(node->right);
-        std::cout << node->value << " ";
-    }
     void PostOrderLeft(std::ostream& out)
     {
         if (left != nullptr)
@@ -240,21 +181,7 @@ public:
 
 //-------------------------ВНУТРЕННИЙ ПРАВЫЙ ОБХОД-------------------------
 
-    void InOrderRight()
-    {
-        if (right != nullptr)
-            right->InOrderRight();
-        std::cout << value << " ";
-        if (left != nullptr)
-            left->InOrderRight();
-    }
-    void InOrderRight(BSTree* node)
-    {
-        if (node == nullptr) return;
-        InOrderRight(node->right);
-        std::cout << node->value << " ";
-        InOrderRight(node->left);
-    }
+
     void InOrderRight(std::ostream& out)
     {
         if (right != nullptr)
@@ -266,21 +193,6 @@ public:
 
 //-------------------------ВНУТРЕННИЙ ЛЕВЫЙ ОБХОД-------------------------
 
-    void InOrderLeft()
-    {
-        if (left != nullptr)
-            left->InOrderLeft();
-        std::cout << value << " ";
-        if (right != nullptr)
-            right->InOrderLeft();
-    }
-    void InOrderLeft(BSTree* node)
-    {
-        if (node == nullptr) return;
-        InOrderLeft(node->left);
-        std::cout << node->value << " ";
-        InOrderLeft(node->right);
-    }
     void InOrderLeft(std::ostream& out)
     {
         if (left != nullptr)
