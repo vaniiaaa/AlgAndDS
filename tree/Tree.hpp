@@ -55,9 +55,9 @@ public:
 
     void deleteTree()
     {
-        delete left;
-        delete right;
+        if (left != nullptr) left->deleteTree();
         left = nullptr;
+        if (right != nullptr) right->deleteTree();
         right = nullptr;
     }
 
