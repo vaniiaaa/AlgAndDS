@@ -10,16 +10,8 @@ public:
     BSTree(int val) : value(val), left(nullptr), right(nullptr) {}
     ~BSTree()
     {
-        if (left != nullptr)
-        {
-            delete left;
-            left = nullptr;
-        }
-        if (right != nullptr)
-        {
-            delete right;
-            right = nullptr;
-        }
+        left = nullptr;
+        right = nullptr;
     }
 
     void AddValue(int val)
