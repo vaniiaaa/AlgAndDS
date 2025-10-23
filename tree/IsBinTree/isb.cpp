@@ -11,8 +11,8 @@ struct node
     long long lower, upper;
     node()
     {
-        lower = INT_MIN - 1;
-        upper = INT_MAX + 1;
+        lower = static_cast<long long>(INT_MIN) - 1;
+        upper = static_cast<long long>(INT_MAX) + 1;
     }
 };
 
