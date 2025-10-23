@@ -107,9 +107,9 @@ public:
                     parent->left = minNode->right;
                 else
                     parent->right = minNode->right;
-
                 delete minNode;
             }
+
         }
     }
 
@@ -150,6 +150,7 @@ public:
                     parent->right = maxNode->left;
                 else
                     parent->left = maxNode->left;
+
                 delete maxNode;
             }
         }
