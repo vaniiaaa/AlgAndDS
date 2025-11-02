@@ -31,7 +31,7 @@ int main()
         int value, relpos;
         char LRpos;
         in >> value >> relpos >> LRpos;
-        if (LRpos == 'L' && tree[relpos].lower < static_cast<long long>(value) && static_cast<long long>(value) < tree[relpos].value)
+        if (LRpos == 'L' && tree[relpos].lower <= static_cast<long long>(value) && static_cast<long long>(value) < tree[relpos].value)
         {
             tree[i].value = value;
             tree[i].upper = tree[relpos].value;
