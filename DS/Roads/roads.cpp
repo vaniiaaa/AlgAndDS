@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <utility>
 
 int Find(std::vector<int>& cities, int x)
 {
@@ -62,14 +63,14 @@ int main()
     {
         Union(cities, roads[quakes[i]].first, roads[quakes[i]].second);
         if ((Ncities - 1 <= Nquakes - i + 1) && IsConnect(cities)) break;   
-        result += '0';
+        result += "0";
         i--;
     }
     i--;
-    result += '1';
+    result += "1";
     while (i > 0)
     {
-        result += '1';
+        result += "1";
         i--;
     }
     for (int i = result.size() - 1; i >= 0; i--) out << result[i];
