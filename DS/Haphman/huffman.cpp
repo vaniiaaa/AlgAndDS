@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <queue>
 
 int main()
 {
@@ -8,16 +9,23 @@ int main()
     int res = 0, size;
     in >> size;
     res = 0;
-    int first, second;
-    in >> first >> second;
-    res += first + second;
-    first = res;
-    while(size > 2)
+    std::priority_queue<long long, std::vector<long long>, std::greater<long long>> nums;
+    while(size > 0)
     {
-        in >> second;
-        first += second;
-        res += first;
+        int temp;
+        in >> temp;
+        nums.push(temp);
         size--;
+    }
+    while(nums.size() > 1)
+    {
+        int n1, n2;
+        n1 = nums.top();
+        nums.pop();
+        n2 = nums.top();
+        nums.pop();
+        res += n1 + n2;
+        nums.push(n1 + n2);
     }
     out << res;
 }
