@@ -1,31 +1,65 @@
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <algorithm>
 #include <queue>
 
 int main()
 {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    
     std::ifstream in("huffman.in");
     std::ofstream out("huffman.out");
-    int res = 0, size;
+    
+    long long size;
     in >> size;
-    res = 0;
-    std::priority_queue<long long, std::vector<long long>, std::greater<long long>> nums;
-    while(size > 0)
+    
+    if (size == 1) 
     {
-        int temp;
-        in >> temp;
-        nums.push(temp);
-        size--;
+        out << 0;
+        return 0;
     }
-    while(nums.size() > 1)
+    
+    std::vector<long long> data(size);
+    for (int i = 0; i < size; ++i) 
     {
-        int n1, n2;
-        n1 = nums.top();
-        nums.pop();
-        n2 = nums.top();
-        nums.pop();
-        res += n1 + n2;
-        nums.push(n1 + n2);
+        in >> data[i];
     }
-    out << res;
+
+    int index = 0;
+    std::queue<long long> q2;
+    
+    long long result = 0;
+    
+    while (index < size || q2.size() > 1) 
+    {
+        long long first, second;
+        if (q2.empty() || (index < size && data[index] <= q2.front())) 
+        {
+            first = data[index++];
+        } 
+        else 
+        {
+            first = q2.front();
+            q2.pop();
+        }
+
+        if (q2.empty() || (index < size && data[index] <= q2.front())) 
+        {
+            second = data[index++];
+        } 
+        else 
+        {
+            second = q2.front();
+            q2.pop();
+        }
+        long long sum = first + second;
+        result += sum;
+        q2.push(sum);
+    }
+    
+    out << result;
+    
+    return 0;
 }
