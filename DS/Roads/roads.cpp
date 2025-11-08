@@ -10,7 +10,7 @@ int Find(std::vector<int>& cities, int x)
     return cities[x];
 }
 
-void Union(std::vector<int>& cities, int x, int y)
+void Union(std::vector<int>& cities, int x, int y, int& counter)
 {
     x = Find(cities, x);
     y = Find(cities, y);
@@ -25,18 +25,7 @@ void Union(std::vector<int>& cities, int x, int y)
         cities[y] += cities[x];
         cities[x] = y;
     }
-}
-
-bool IsConnect(const std::vector<int>& cities)
-{
-    int size = cities.size();
-    int negcount = 0;
-    for (int i = 1; i < size; i++)
-    {
-        if (cities[i] < 0) negcount++;
-        if (negcount == 2) return false;
-    }
-    return true;
+    counter--;
 }
 
 int main()
@@ -46,6 +35,12 @@ int main()
     int Ncities, Nroads, Nquakes;
     in >> Ncities >> Nroads >> Nquakes;
     
+    if (Ncities == 1) 
+    {
+        out << Ncities;
+        return 0;
+    }
+
     std::vector<std::pair<int, int>> roads(Nroads + 1);
     for (int i = 1; i <= Nroads; i++)
     {
@@ -57,22 +52,26 @@ int main()
     {
         in >> quakes[i];
     }
-    
+    std::vector<bool> destroyed(Nroads + 1, false);
+    for (int i = 1; i <= Nquakes; i++) 
+    {
+        destroyed[quakes[i]] = true;
+    }
+
     std::vector<int> cities(Ncities + 1, -1);
     std::string result;
     int i = Nquakes;
-    
-    while (true)
+    int counter = Ncities;
+    for (int j = 0; j <=Nroads; j++)
     {
-        Union(cities, roads[quakes[i]].first, roads[quakes[i]].second);
-        if ((Ncities - 1 <= Nquakes - i + 1) && IsConnect(cities)) break;
+        if (!destroyed[j]) Union(cities, roads[j].first, roads[j].second, counter);
+    }
+    while (counter > 1 && i > 0)
+    {
+        Union(cities, roads[quakes[i]].first, roads[quakes[i]].second, counter);
         result += "0";
         i--;
     }
-
-    result += "0";  
-    i--;            
-
     while (i > 0)
     {
         result += "1";
