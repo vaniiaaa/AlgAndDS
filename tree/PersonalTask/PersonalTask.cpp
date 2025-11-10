@@ -1,7 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <climits>
+#include <algorithm>
+
 
 class BSTree
 {
@@ -64,14 +65,6 @@ public:
         }
     }
 
-    void SeparateWays()
-    {
-        int index = wayfornodes.size() - 1;
-        if (value == wayfornodes[index][0]->GetValue()) return;
-        
-    }
-    
-
     void BuildWay(BSTree *node, std::vector<BSTree *> &currentWay)
     {
         if (!node)
@@ -86,8 +79,9 @@ public:
     void FindNodeToDelete()
     {
         int minsum = INT_MAX;
+        int possubway = -1; //1 - лист - нелист, 2 - нелист лист
         int minindex = -1;
-        for (size_t index = 0; index < wayfornodes.size(); ++index)
+        for (int index = 0; index < wayfornodes.size(); ++index)
         {
             if (wayfornodes[index].size() < 2)
                 continue;
@@ -97,35 +91,51 @@ public:
             {
                 currsum2 = wayfornodes[index][1]->GetValue() + wayfornodes[index][wayfornodes[index].size() - 2]->GetValue();
             }
-            int currsum = std::min(currsum1, currsum2);
-            if (currsum < minsum)
+            if (currsum1 < minsum)
             {
-                minsum = currsum;
+                minsum = currsum1;
+                possubway = 1;
                 minindex = index;
             }
-            else if (currsum == minsum && minindex >= 0)
+            else if (currsum1 == minsum && roots[index]->GetValue() < roots[minindex]->GetValue())
             {
-                if (roots[index]->GetValue() < roots[minindex]->GetValue())
-                    minindex = index;
+                minindex = index;
+                possubway = 1;
+            }
+            if (currsum2 < minsum)
+            {
+                minsum = currsum2;
+                possubway = 2;
+                minindex = index;
+            }
+            else if (currsum2 == minsum && roots[index]->GetValue() < roots[minindex]->GetValue())
+            {
+                minindex = index;
+                possubway = 2;
             }
         }
+        
         if (minindex >= 0 && !wayfornodes[minindex].empty())
         {
-            const std::vector<BSTree*>& path = wayfornodes[minindex];
-            int sum = 0;
-            for (const auto* node : path)
-                sum += node->GetValue();
-            double avg = static_cast<double>(sum) / path.size();
-            int minDiff = INT_MAX;
-            int valueToDelete = path[0]->GetValue();
-            for (const auto* node : path)
+            int valueToDelete;
+            if ((wayfornodes[minindex].size() - 1) % 2 == 0)
+                return;
+            sort(wayfornodes[minindex].begin(), wayfornodes[minindex].end(), [](BSTree* a, BSTree* b) { return a->GetValue() < b->GetValue(); });
+            if (wayfornodes[minindex][0]->GetValue() == value)
+                valueToDelete = wayfornodes[minindex][wayfornodes[minindex].size() / 2]->GetValue();
+            else 
             {
-                int diff = std::abs(node->GetValue() - avg);
-                if (diff < minDiff)
+                std::vector<BSTree*> subpath;
+                if (possubway == 1)
                 {
-                    minDiff = diff;
-                    valueToDelete = node->GetValue();
+                    subpath = std::vector<BSTree*>(wayfornodes[minindex].begin(), wayfornodes[minindex].end() - 1);
                 }
+                else
+                {
+                    subpath = std::vector<BSTree*>(wayfornodes[minindex].begin() + 1, wayfornodes[minindex].end());
+                }
+                
+                valueToDelete = subpath[subpath.size() / 2]->GetValue();
             }
             BSTree* rootPtr = this;
             deleteRight(rootPtr, valueToDelete);

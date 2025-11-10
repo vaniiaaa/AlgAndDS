@@ -260,5 +260,17 @@ private:
         }
     }*/
 
+    /*void SeparateWays()
+    {
+        int index = wayfornodes.size() - 1;
+        if (value == wayfornodes[index][0]->GetValue()) 
+        {
+            wayfornodes.push_back(wayfornodes[index]);
+        }
+        std::vector<BSTree*> way1(wayfornodes[index].begin(), wayfornodes[index].end() - 1);
+        std::vector<BSTree*> way2(wayfornodes[index].begin() + 1, wayfornodes[index].end());
+        wayfornodes[index] = way1;
+        wayfornodes.push_back(way2);
+    }*/
     
 };
