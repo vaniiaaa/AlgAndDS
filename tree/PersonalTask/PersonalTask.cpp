@@ -28,6 +28,27 @@ public:
 
     int GetValue() const { return value; }
 
+    void StartFindSubTrees()
+    {
+        int totalCount;
+        int leftCount = FindSubTrees(left);
+        int rightCount = FindSubTrees(right);
+        if (left == nullptr || right == nullptr)
+            totalCount = leftCount + rightCount + 2;
+        else
+            totalCount = leftCount + rightCount + 1;
+        if (totalCount > maxway)
+        {
+            maxway = totalCount;
+            roots.clear();
+            roots.push_back(this);
+        }
+        else if (totalCount == maxway)
+        {
+            roots.push_back(this);
+        }
+    }
+
     int FindSubTrees(BSTree *node)
     {
         if (node == nullptr)
@@ -70,10 +91,16 @@ public:
         if (!node)
             return;
         if (node->leftsubtree >= node->rightsubtree)
+        {
             BuildWay(node->left, currentWay);
+            currentWay.push_back(node);
+        }
         else
+        {
+            currentWay.push_back(node);
             BuildWay(node->right, currentWay);
-        currentWay.push_back(node);
+        }
+        
     }
 
     void FindNodeToDelete()
@@ -81,15 +108,18 @@ public:
         int minsum = INT_MAX;
         int possubway = -1; //1 - лист - нелист, 2 - нелист лист
         int minindex = -1;
+        int currsum1, currsum2;
         for (int index = 0; index < wayfornodes.size(); ++index)
         {
-            if (wayfornodes[index].size() < 2)
-                continue;
-            int currsum1 = wayfornodes[index][0]->GetValue() + wayfornodes[index].back()->GetValue();
-            int currsum2 = INT_MAX;
-            if (wayfornodes[index].size() >= 3)
+            if (wayfornodes[index][0]->GetValue() == value)
             {
-                currsum2 = wayfornodes[index][1]->GetValue() + wayfornodes[index][wayfornodes[index].size() - 2]->GetValue();
+                currsum1 = wayfornodes[index][0]->GetValue() + wayfornodes[index][wayfornodes[index].size() - 1]->GetValue();
+                currsum2 = INT_MAX;
+            }
+            else
+            {
+                currsum1 = wayfornodes[index][0]->GetValue() + wayfornodes[index][wayfornodes[index].size() - 2]->GetValue();
+                currsum2 = wayfornodes[index][1]->GetValue() + wayfornodes[index][wayfornodes[index].size() - 1]->GetValue();
             }
             if (currsum1 < minsum)
             {
@@ -118,24 +148,22 @@ public:
         if (minindex >= 0 && !wayfornodes[minindex].empty())
         {
             int valueToDelete;
-            if ((wayfornodes[minindex].size() - 1) % 2 == 0)
+            if (wayfornodes[minindex][0]->GetValue() == value && wayfornodes[minindex].size() % 2 == 0)
                 return;
-            sort(wayfornodes[minindex].begin(), wayfornodes[minindex].end(), [](BSTree* a, BSTree* b) { return a->GetValue() < b->GetValue(); });
+            else if (wayfornodes[minindex][0]->GetValue() != value && wayfornodes[minindex].size() % 2 != 0)
+                return;
             if (wayfornodes[minindex][0]->GetValue() == value)
                 valueToDelete = wayfornodes[minindex][wayfornodes[minindex].size() / 2]->GetValue();
             else 
             {
-                std::vector<BSTree*> subpath;
                 if (possubway == 1)
                 {
-                    subpath = std::vector<BSTree*>(wayfornodes[minindex].begin(), wayfornodes[minindex].end() - 1);
+                    valueToDelete = wayfornodes[minindex][wayfornodes[minindex].size() / 2 - 1]->GetValue();
                 }
                 else
                 {
-                    subpath = std::vector<BSTree*>(wayfornodes[minindex].begin() + 1, wayfornodes[minindex].end());
+                    valueToDelete = wayfornodes[minindex][wayfornodes[minindex].size() / 2]->GetValue();
                 }
-                
-                valueToDelete = subpath[subpath.size() / 2]->GetValue();
             }
             BSTree* rootPtr = this;
             deleteRight(rootPtr, valueToDelete);
@@ -301,6 +329,14 @@ public:
         if (right != nullptr)
             right->PreOrderLeft(out);
     }
+    void PreOrderLeft(std::vector<int>& v)
+    {
+        v.push_back(value);
+        if (left != nullptr)
+            left->PreOrderLeft(v);
+        if (right != nullptr)
+            right->PreOrderLeft(v);
+    }
 
     //-------------------------ОБРАТНЫЙ ПРАВЫЙ ОБХОД-------------------------
 
@@ -364,7 +400,7 @@ int main()
         in >> temp;
         Tree->AddValue(temp);
     }
-    Tree->FindSubTrees(Tree);
+    Tree->StartFindSubTrees();
     Tree->MakeWays();
     Tree->FindNodeToDelete();
     Tree->PreOrderLeft(out);
