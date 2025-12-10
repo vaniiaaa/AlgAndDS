@@ -33,17 +33,14 @@ public:
         int totalCount;
         int leftCount = FindSubTrees(left);
         int rightCount = FindSubTrees(right);
-        if (left == nullptr || right == nullptr)
-            totalCount = leftCount + rightCount + 2;
-        else
-            totalCount = leftCount + rightCount + 1;
+        totalCount = leftCount + rightCount + 1;
         if (totalCount > maxway)
         {
             maxway = totalCount;
             roots.clear();
             roots.push_back(this);
         }
-        else if (totalCount == maxway)
+        else if (totalCount == maxway - 1)
         {
             roots.push_back(this);
         }
@@ -79,26 +76,43 @@ public:
         for (auto root : roots)
         {
             std::vector<BSTree *> currentWay;
-            BuildWay(root->left, currentWay);
+            BuildWayLeft(root->left, currentWay);
             currentWay.push_back(root);
-            BuildWay(root->right, currentWay);
+            BuildWayRight(root->right, currentWay);
             wayfornodes.push_back(currentWay);
         }
     }
 
-    void BuildWay(BSTree *node, std::vector<BSTree *> &currentWay)
+    void BuildWayLeft(BSTree *node, std::vector<BSTree *> &currentWay)
     {
         if (!node)
             return;
         if (node->leftsubtree >= node->rightsubtree)
         {
-            BuildWay(node->left, currentWay);
+            BuildWayLeft(node->left, currentWay);
             currentWay.push_back(node);
         }
         else
         {
+            BuildWayLeft(node->right, currentWay);
             currentWay.push_back(node);
-            BuildWay(node->right, currentWay);
+        }
+        
+    }
+
+    void BuildWayRight(BSTree *node, std::vector<BSTree *> &currentWay)
+    {
+        if (!node)
+            return;
+        if (node->leftsubtree >= node->rightsubtree)
+        {
+            currentWay.push_back(node);
+            BuildWayRight(node->left, currentWay);
+        }
+        else
+        {
+            currentWay.push_back(node);
+            BuildWayRight(node->right, currentWay);
         }
         
     }
@@ -111,7 +125,7 @@ public:
         int currsum1, currsum2;
         for (int index = 0; index < wayfornodes.size(); ++index)
         {
-            if (wayfornodes[index][0]->GetValue() == value)
+            if (wayfornodes[index][0]->GetValue() == value || wayfornodes[index][wayfornodes[index].size() - 1]->GetValue() == value)
             {
                 currsum1 = wayfornodes[index][0]->GetValue() + wayfornodes[index][wayfornodes[index].size() - 1]->GetValue();
                 currsum2 = INT_MAX;
@@ -143,32 +157,63 @@ public:
                 minindex = index;
                 possubway = 2;
             }
+            if (currsum1 == currsum2 && roots[index]->GetValue() == roots[minindex]->GetValue())
+                possubway = 3;
         }
-        
+        //std::cout << minsum << " " << possubway << " " << minindex << '\n';
         if (minindex >= 0 && !wayfornodes[minindex].empty())
         {
             int valueToDelete;
-            if (wayfornodes[minindex][0]->GetValue() == value && wayfornodes[minindex].size() % 2 == 0)
+            if ((wayfornodes[minindex][0]->GetValue() == value || wayfornodes[minindex][wayfornodes[minindex].size() - 1]->GetValue() == value) && wayfornodes[minindex].size() % 2 == 0)
                 return;
-            else if (wayfornodes[minindex][0]->GetValue() != value && wayfornodes[minindex].size() % 2 != 0)
+            else if (wayfornodes[minindex][0]->GetValue() != value && wayfornodes[minindex][wayfornodes[minindex].size() - 1]->GetValue() != value  && wayfornodes[minindex].size() % 2 != 0)
                 return;
-            if (wayfornodes[minindex][0]->GetValue() == value)
-                valueToDelete = wayfornodes[minindex][wayfornodes[minindex].size() / 2]->GetValue();
+            if ((wayfornodes[minindex][0]->GetValue() == value || wayfornodes[minindex][wayfornodes[minindex].size() - 1]->GetValue() == value))
+                {
+                    sort(wayfornodes[minindex].begin(), wayfornodes[minindex].end() - 1, [](const BSTree* n1, const BSTree* n2) {return n1->GetValue() < n2->GetValue();});
+                    valueToDelete = wayfornodes[minindex][wayfornodes[minindex].size() / 2]->GetValue();
+                }
             else 
             {
+                
                 if (possubway == 1)
                 {
+                    sort(wayfornodes[minindex].begin(), wayfornodes[minindex].end() - 1, [](const BSTree* n1, const BSTree* n2) {return n1->GetValue() < n2->GetValue();});
                     valueToDelete = wayfornodes[minindex][wayfornodes[minindex].size() / 2 - 1]->GetValue();
                 }
-                else
+                else if (possubway == 2)
                 {
+                    sort(wayfornodes[minindex].begin(), wayfornodes[minindex].end() - 1, [](const BSTree* n1, const BSTree* n2) {return n1->GetValue() < n2->GetValue();});
                     valueToDelete = wayfornodes[minindex][wayfornodes[minindex].size() / 2]->GetValue();
+                }
+                else if (possubway == 3)
+                {
+                    std::vector<BSTree*> wayfornodes2 (wayfornodes[minindex]);
+                    sort(wayfornodes[minindex].begin(), wayfornodes[minindex].end() - 1, [](const BSTree* n1, const BSTree* n2) {return n1->GetValue() < n2->GetValue();});
+                    sort(wayfornodes2.begin(), wayfornodes2.end() - 1, [](const BSTree* n1, const BSTree* n2) {return n1->GetValue() < n2->GetValue();});
+                    int valueToDelete1 = wayfornodes[minindex][wayfornodes[minindex].size() / 2 - 1]->GetValue();
+                    int valueToDelete2 = wayfornodes2[wayfornodes[minindex].size() / 2]->GetValue();
+                    if (valueToDelete1 != valueToDelete2) return;
+                    else valueToDelete = std::min(valueToDelete1, valueToDelete2);
                 }
             }
             BSTree* rootPtr = this;
             deleteRight(rootPtr, valueToDelete);
         }
 
+    }
+
+    void ShowWays()
+    {
+        for (auto a: roots) std::cout << a->value  << " ";
+        std::cout << '\n';
+        for (auto a: wayfornodes)
+        {
+            for (auto b: a)
+                std::cout << b->value << " ";
+            std::cout << '\n'; 
+        }
+        std::cout << maxway;
     }
 
     void AddValue(int val)
@@ -402,6 +447,7 @@ int main()
     }
     Tree->StartFindSubTrees();
     Tree->MakeWays();
+    //Tree->ShowWays();
     Tree->FindNodeToDelete();
     Tree->PreOrderLeft(out);
     in.close();
