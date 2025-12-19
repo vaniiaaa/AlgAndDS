@@ -2,216 +2,205 @@
 #include <fstream>
 #include <vector>
 #include <algorithm>
+#include <set>
 
-
-class BSTree
-{
+class BSTree {
     static int maxway;
-    static std::vector<BSTree *> roots;
-    static std::vector<std::vector<BSTree *>> wayfornodes;
+    static std::vector<BSTree*> roots;
+    static std::vector<std::pair<std::vector<BSTree*>, BSTree*>> wayfornodes;
 
     int leftsubtree, rightsubtree;
     int value;
+    int size;
     BSTree *left;
     BSTree *right;
-    int depth;
-
-    BSTree() : value(0), left(nullptr), right(nullptr) {}
 
 public:
-    BSTree(int val) : value(val), left(nullptr), right(nullptr) {}
-    ~BSTree()
-    {
-        left = nullptr;
-        right = nullptr;
+    BSTree(int val) : value(val), left(nullptr), right(nullptr), size(1), leftsubtree(0), rightsubtree(0) {}
+
+    ~BSTree() {
+        if (left) delete left;
+        if (right) delete right;
     }
 
     int GetValue() const { return value; }
 
-    void StartFindSubTrees()
-    {
-        int totalCount;
-        int leftCount = FindSubTrees(left);
-        int rightCount = FindSubTrees(right);
-        totalCount = leftCount + rightCount + 1;
-        if (totalCount > maxway)
-        {
-            maxway = totalCount;
-            roots.clear();
-            roots.push_back(this);
-        }
-        else if (totalCount == maxway - 1)
-        {
-            roots.push_back(this);
-        }
+    void CalcSize() {
+        size = 1;
+        if (left) { left->CalcSize(); size += left->size; }
+        if (right) { right->CalcSize(); size += right->size; }
+    }
+    
+    int GetDescendantsCount() const { return size - 1; }
+
+    BSTree* GetDeepest() {
+        if (!left && !right) return this;
+        if (!left) return right->GetDeepest();
+        if (!right) return left->GetDeepest();
+        
+        if (leftsubtree >= rightsubtree) return left->GetDeepest();
+        else return right->GetDeepest();
     }
 
-    int FindSubTrees(BSTree *node)
-    {
-        if (node == nullptr)
-            return 0;
-
-        int leftCount = FindSubTrees(node->left);
-        int rightCount = FindSubTrees(node->right);
-        int totalCount = leftCount + rightCount + 1;
-
-        if (totalCount > maxway)
-        {
-            maxway = totalCount;
-            roots.clear();
-            roots.push_back(node);
-        }
-        else if (totalCount == maxway)
-        {
-            roots.push_back(node);
-        }
-
-        node->leftsubtree = leftCount;
-        node->rightsubtree = rightCount;
-        return std::max(leftCount, rightCount) + 1;
+    void StartFindSubTrees() {
+        CalcSize();
+        maxway = 0;
+        roots.clear();
+        wayfornodes.clear();
+        FindSubTrees(this);
     }
 
-    void MakeWays()
-    {
-        for (auto root : roots)
-        {
-            std::vector<BSTree *> currentWay;
+    int FindSubTrees(BSTree *node) {
+        if (node == nullptr) return 0;
+        
+        int leftH = FindSubTrees(node->left);
+        int rightH = FindSubTrees(node->right);
+
+        node->leftsubtree = leftH;
+        node->rightsubtree = rightH;
+
+        int fullLen = leftH + rightH + 1;
+        BSTree* endL = (node->left) ? node->left->GetDeepest() : node;
+        BSTree* endR = (node->right) ? node->right->GetDeepest() : node;
+
+
+        int validLen = 0;
+        
+        if (endL->GetDescendantsCount() != endR->GetDescendantsCount()) {
+            validLen = fullLen;
+        } else {
+
+            validLen = (fullLen > 1) ? fullLen - 1 : 0;
+        }
+
+        if (validLen > 0) {
+            if (validLen > maxway) {
+                maxway = validLen;
+                roots.clear();
+                roots.push_back(node);
+            } else if (validLen == maxway) {
+                roots.push_back(node);
+            }
+        }
+
+        return std::max(leftH, rightH) + 1;
+    }
+
+    void MakeWays() {
+        for (auto root : roots) {
+            std::vector<BSTree*> currentWay;
+            
             BuildWayLeft(root->left, currentWay);
             currentWay.push_back(root);
             BuildWayRight(root->right, currentWay);
-            wayfornodes.push_back(currentWay);
+
+            if (currentWay.empty()) continue;
+
+
+            bool fullPathValid = (currentWay.front()->GetDescendantsCount() != currentWay.back()->GetDescendantsCount());
+            
+            if (currentWay.size() == maxway && fullPathValid) {
+                wayfornodes.push_back({currentWay, root});
+            }
+
+            else if (currentWay.size() > maxway) {
+
+                if (currentWay.size() - 1 == maxway) {
+                    std::vector<BSTree*> p1(currentWay.begin() + 1, currentWay.end());
+                    if (p1.front()->GetDescendantsCount() != p1.back()->GetDescendantsCount()) {
+                        wayfornodes.push_back({p1, root});
+                    }
+
+                    std::vector<BSTree*> p2(currentWay.begin(), currentWay.end() - 1);
+                    if (p2.front()->GetDescendantsCount() != p2.back()->GetDescendantsCount()) {
+                        wayfornodes.push_back({p2, root});
+                    }
+                }
+            }
         }
     }
 
-    void BuildWayLeft(BSTree *node, std::vector<BSTree *> &currentWay)
-    {
-        if (!node)
-            return;
-        if (node->leftsubtree >= node->rightsubtree)
-        {
+    void BuildWayLeft(BSTree *node, std::vector<BSTree*> &currentWay) {
+        if (!node) return;
+        if (node->leftsubtree >= node->rightsubtree) {
             BuildWayLeft(node->left, currentWay);
             currentWay.push_back(node);
-        }
-        else
-        {
+        } else {
             BuildWayLeft(node->right, currentWay);
             currentWay.push_back(node);
         }
-        
     }
 
-    void BuildWayRight(BSTree *node, std::vector<BSTree *> &currentWay)
-    {
-        if (!node)
-            return;
-        if (node->leftsubtree >= node->rightsubtree)
-        {
+    void BuildWayRight(BSTree *node, std::vector<BSTree*> &currentWay) {
+        if (!node) return;
+        if (node->leftsubtree >= node->rightsubtree) {
             currentWay.push_back(node);
             BuildWayRight(node->left, currentWay);
-        }
-        else
-        {
+        } else {
             currentWay.push_back(node);
             BuildWayRight(node->right, currentWay);
         }
+    }
+
+    void FindNodeToDelete() {
+        if (wayfornodes.empty()) return;
+
+        long long minSum = LLONG_MAX;
+
+
+        for (auto &pair : wayfornodes) {
+            long long s = (long long)pair.first.front()->value + pair.first.back()->value;
+            if (s < minSum) minSum = s;
+        }
+
+        std::vector<int> candidates;
+        for (int i = 0; i < wayfornodes.size(); ++i) {
+            long long s = (long long)wayfornodes[i].first.front()->value + wayfornodes[i].first.back()->value;
+            if (s == minSum) candidates.push_back(i);
+        }
+
+        int minRootVal = INT_MAX;
+        for (int i : candidates) {
+            if (wayfornodes[i].second->value < minRootVal) 
+                minRootVal = wayfornodes[i].second->value;
+        }
+
+        std::vector<int> finalCandidates;
+        for (int i : candidates) {
+            if (wayfornodes[i].second->value == minRootVal)
+                finalCandidates.push_back(i);
+        }
+
+        std::set<int> distinctMiddleNodes;
+
+        for (int i : finalCandidates) {
+            auto &path = wayfornodes[i].first;
         
-    }
-
-    void FindNodeToDelete()
-    {
-        int minsum = INT_MAX;
-        int possubway = -1; //1 - лист - нелист, 2 - нелист лист
-        int minindex = -1;
-        int currsum1, currsum2;
-        for (int index = 0; index < wayfornodes.size(); ++index)
-        {
-            if (wayfornodes[index][0]->GetValue() == value || wayfornodes[index][wayfornodes[index].size() - 1]->GetValue() == value)
-            {
-                currsum1 = wayfornodes[index][0]->GetValue() + wayfornodes[index][wayfornodes[index].size() - 1]->GetValue();
-                currsum2 = INT_MAX;
-            }
-            else
-            {
-                currsum1 = wayfornodes[index][0]->GetValue() + wayfornodes[index][wayfornodes[index].size() - 2]->GetValue();
-                currsum2 = wayfornodes[index][1]->GetValue() + wayfornodes[index][wayfornodes[index].size() - 1]->GetValue();
-            }
-            if (currsum1 < minsum)
-            {
-                minsum = currsum1;
-                possubway = 1;
-                minindex = index;
-            }
-            else if (currsum1 == minsum && roots[index]->GetValue() < roots[minindex]->GetValue())
-            {
-                minindex = index;
-                possubway = 1;
-            }
-            if (currsum2 < minsum)
-            {
-                minsum = currsum2;
-                possubway = 2;
-                minindex = index;
-            }
-            else if (currsum2 == minsum && roots[index]->GetValue() < roots[minindex]->GetValue())
-            {
-                minindex = index;
-                possubway = 2;
-            }
-            if (currsum1 == currsum2 && roots[index]->GetValue() == roots[minindex]->GetValue())
-                possubway = 3;
-        }
-        //std::cout << minsum << " " << possubway << " " << minindex << '\n';
-        if (minindex >= 0 && !wayfornodes[minindex].empty())
-        {
-            int valueToDelete;
-            if ((wayfornodes[minindex][0]->GetValue() == value || wayfornodes[minindex][wayfornodes[minindex].size() - 1]->GetValue() == value) && wayfornodes[minindex].size() % 2 == 0)
-                return;
-            else if (wayfornodes[minindex][0]->GetValue() != value && wayfornodes[minindex][wayfornodes[minindex].size() - 1]->GetValue() != value  && wayfornodes[minindex].size() % 2 != 0)
-                return;
-            if ((wayfornodes[minindex][0]->GetValue() == value || wayfornodes[minindex][wayfornodes[minindex].size() - 1]->GetValue() == value))
-                {
-                    sort(wayfornodes[minindex].begin(), wayfornodes[minindex].end() - 1, [](const BSTree* n1, const BSTree* n2) {return n1->GetValue() < n2->GetValue();});
-                    valueToDelete = wayfornodes[minindex][wayfornodes[minindex].size() / 2]->GetValue();
-                }
-            else 
-            {
-                
-                if (possubway == 1)
-                {
-                    sort(wayfornodes[minindex].begin(), wayfornodes[minindex].end() - 1, [](const BSTree* n1, const BSTree* n2) {return n1->GetValue() < n2->GetValue();});
-                    valueToDelete = wayfornodes[minindex][wayfornodes[minindex].size() / 2 - 1]->GetValue();
-                }
-                else if (possubway == 2)
-                {
-                    sort(wayfornodes[minindex].begin(), wayfornodes[minindex].end() - 1, [](const BSTree* n1, const BSTree* n2) {return n1->GetValue() < n2->GetValue();});
-                    valueToDelete = wayfornodes[minindex][wayfornodes[minindex].size() / 2]->GetValue();
-                }
-                else if (possubway == 3)
-                {
-                    std::vector<BSTree*> wayfornodes2 (wayfornodes[minindex]);
-                    sort(wayfornodes[minindex].begin(), wayfornodes[minindex].end() - 1, [](const BSTree* n1, const BSTree* n2) {return n1->GetValue() < n2->GetValue();});
-                    sort(wayfornodes2.begin(), wayfornodes2.end() - 1, [](const BSTree* n1, const BSTree* n2) {return n1->GetValue() < n2->GetValue();});
-                    int valueToDelete1 = wayfornodes[minindex][wayfornodes[minindex].size() / 2 - 1]->GetValue();
-                    int valueToDelete2 = wayfornodes2[wayfornodes[minindex].size() / 2]->GetValue();
-                    if (valueToDelete1 != valueToDelete2) return;
-                    else valueToDelete = std::min(valueToDelete1, valueToDelete2);
-                }
-            }
-            BSTree* rootPtr = this;
-            deleteRight(rootPtr, valueToDelete);
+            if (path.size() % 2 == 0) continue; 
+           
+            std::vector<BSTree*> sortedPath = path;
+            std::sort(sortedPath.begin(), sortedPath.end(), [](BSTree* a, BSTree* b){
+                return a->GetValue() < b->GetValue();
+            });
+            
+            distinctMiddleNodes.insert(sortedPath[sortedPath.size() / 2]->GetValue());
         }
 
+        if (distinctMiddleNodes.size() != 1) return;
+
+        int valToDelete = *distinctMiddleNodes.begin();
+        
+        BSTree* ptr = this; 
+        deleteRight(ptr, valToDelete);
     }
 
-    void ShowWays()
-    {
-        for (auto a: roots) std::cout << a->value  << " ";
+    void ShowWays() {
+        for (auto a: roots) std::cout << a->value << " ";
         std::cout << '\n';
-        for (auto a: wayfornodes)
-        {
-            for (auto b: a)
-                std::cout << b->value << " ";
-            std::cout << '\n'; 
+        for (auto a: wayfornodes) {
+            for (auto b: a.first) std::cout << b->value << " ";
+            std::cout << "Root: " << a.second->value;
+            std::cout << '\n';
         }
         std::cout << maxway;
     }
@@ -268,9 +257,7 @@ public:
 
     void deleteRight(BSTree *&node, int val)
     {
-        if (node == nullptr)
-            return;
-
+        if (node == nullptr) return;
         if (val < node->value)
             deleteRight(node->left, val);
         else if (val > node->value)
@@ -282,9 +269,14 @@ public:
                 delete node;
                 node = nullptr;
             }
+
             else if (node->left == nullptr || node->right == nullptr)
             {
                 BSTree *temp = (node->left != nullptr) ? node->left : node->right;
+            
+                node->left = nullptr; 
+                node->right = nullptr;
+                
                 delete node;
                 node = temp;
             }
@@ -292,19 +284,19 @@ public:
             {
                 BSTree *parent = node;
                 BSTree *minNode = node->right;
-
                 while (minNode->left != nullptr)
                 {
                     parent = minNode;
                     minNode = minNode->left;
                 }
-
                 node->value = minNode->value;
-
                 if (parent->left == minNode)
                     parent->left = minNode->right;
                 else
                     parent->right = minNode->right;
+
+                minNode->right = nullptr; 
+                
                 delete minNode;
             }
         }
@@ -431,7 +423,7 @@ public:
 
 int BSTree::maxway = 0;
 std::vector<BSTree *> BSTree::roots = {};
-std::vector<std::vector<BSTree *>> BSTree::wayfornodes = {};
+std::vector<std::pair<std::vector<BSTree*>, BSTree*>> BSTree::wayfornodes = {};
 
 int main()
 {
